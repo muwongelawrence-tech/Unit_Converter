@@ -4,13 +4,10 @@
 
 // To keep your imports tidy, follow the ordering guidelines at
 // https://www.dartlang.org/guides/language/effective-dart/style#ordering
-import 'package:demo/unit.dart';
 import 'package:flutter/material.dart';
 
-// import 'package:task_05_stateful_widgets/converter_route.dart';
-// import 'package:task_05_stateful_widgets/unit.dart';
-
 import 'converter_route.dart';
+import 'unit.dart';
 
 // We use an underscore to indicate that these variables are private.
 // See https://www.dartlang.org/guides/language/effective-dart/design#libraries
@@ -60,6 +57,9 @@ class Category extends StatelessWidget {
             color: color,
             units: units,
           ),
+          // This prevents the attempt to resize the screen when the keyboard
+          // is opened
+          resizeToAvoidBottomInset: false,
         );
       },
     ));
@@ -80,6 +80,7 @@ class Category extends StatelessWidget {
         height: _rowHeight,
         child: InkWell(
           borderRadius: _borderRadius,
+          // TODO: Use the highlight and splash colors from the ColorSwatch
           highlightColor: color,
           splashColor: color,
           // We can use either the () => function() or the () { function(); }
