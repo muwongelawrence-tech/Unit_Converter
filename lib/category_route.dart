@@ -4,10 +4,11 @@
 
 import 'package:flutter/material.dart';
 
+import 'backdrop.dart';
 import 'category.dart';
+import 'category_tile.dart';
 import 'unit.dart';
-
-final _backgroundColor = Colors.green[100];
+import 'unit_converter.dart';
 
 /// Category Route (screen).
 ///
@@ -24,6 +25,8 @@ class CategoryRoute extends StatefulWidget {
 }
 
 class _CategoryRouteState extends State<CategoryRoute> {
+  Category? _defaultCategory;
+  Category? _currentCategory;
   final _categories = <Category>[];
   static const _categoryNames = <String>[
     'Length',
@@ -75,21 +78,39 @@ class _CategoryRouteState extends State<CategoryRoute> {
   void initState() {
     super.initState();
     for (var i = 0; i < _categoryNames.length; i++) {
-      _categories.add(Category(
+      var category = Category(
         name: _categoryNames[i],
         color: _baseColors[i],
         iconLocation: Icons.cake,
         units: _retrieveUnitList(_categoryNames[i]),
-      ));
+      );
+      if (i == 0) {
+        _defaultCategory = category;
+      }
+      _categories.add(category);
     }
   }
 
-  /// Makes the correct number of rows for the list view.
+  /// Function to call when a [Category] is tapped.
+  void _onCategoryTap(Category category) {
+    setState(() {
+      _currentCategory = category;
+    });
+  }
+
+  // TODO: Use a GridView for landscape mode, passing in the device orientation
+  /// Makes the correct number of rows for the list view, based on whether the
+  /// device is portrait or landscape.
   ///
-  /// For portrait, we use a [ListView].
+  /// For portrait, we use a [ListView]. For landscape, we use a [GridView].
   Widget _buildCategoryWidgets() {
     return ListView.builder(
-      itemBuilder: (BuildContext context, int index) => _categories[index],
+      itemBuilder: (BuildContext context, int index) {
+        return CategoryTile(
+          category: _categories[index],
+          onTap: _onCategoryTap,
+        );
+      },
       itemCount: _categories.length,
     );
   }
@@ -107,28 +128,23 @@ class _CategoryRouteState extends State<CategoryRoute> {
 
   @override
   Widget build(BuildContext context) {
-    final listView = Container(
-      color: _backgroundColor,
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+    final listView = Padding(
+      padding: const EdgeInsets.only(
+        left: 8.0,
+        right: 8.0,
+        bottom: 48.0,
+      ),
       child: _buildCategoryWidgets(),
     );
 
-    final appBar = AppBar(
-      elevation: 0.0,
-      title: const Text(
-        'Unit Converter',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 30.0,
-        ),
-      ),
-      centerTitle: true,
-      backgroundColor: _backgroundColor,
-    );
-
-    return Scaffold(
-      appBar: appBar,
-      body: listView,
+    return Backdrop(
+      currentCategory: _currentCategory ?? _defaultCategory!,
+      frontPanel: _currentCategory == null
+          ? UnitConverter(category: _defaultCategory!)
+          : UnitConverter(category: _currentCategory!),
+      backPanel: listView,
+      frontTitle: const Text('Unit Converter'),
+      backTitle: const Text('Select a Category'),
     );
   }
 }
