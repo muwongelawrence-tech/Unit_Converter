@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// ignore_for_file: unused_field
+import 'dart:async';
 
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 
+import 'api.dart';
 import 'category.dart';
 import 'unit.dart';
 
@@ -35,8 +36,8 @@ class _UnitConverterState extends State<UnitConverter> {
   String _convertedValue = '';
   List<DropdownMenuItem>? _unitMenuItems;
   bool _showValidationError = false;
-  // TODO: Pass this into the TextField so that the input value persists
   final _inputKey = GlobalKey(debugLabel: 'inputText');
+  // TODO: Add a flag for whether to show error UI
 
   @override
   void initState() {
@@ -100,11 +101,24 @@ class _UnitConverterState extends State<UnitConverter> {
     return outputNum;
   }
 
-  void _updateConversion() {
-    setState(() {
-      _convertedValue = _format(
-          _inputValue! * (_toValue!.conversion! / _fromValue!.conversion!));
-    });
+  Future<void> _updateConversion() async {
+    // Our API has a handy convert function, so we can use that for
+    // the Currency [Category]
+    if (widget.category.name == apiCategory['name']) {
+      final api = Api();
+      final conversion = await api.convert(apiCategory['route'],
+          _inputValue.toString(), _fromValue!.name, _toValue!.name);
+      // TODO: Check whether to show an error UI
+      setState(() {
+        _convertedValue = _format(conversion!);
+      });
+    } else {
+      // For the static units, we do the conversion ourselves
+      setState(() {
+        _convertedValue = _format(
+            _inputValue! * (_toValue!.conversion! / _fromValue!.conversion!));
+      });
+    }
   }
 
   void _updateInputValue(String input) {
@@ -188,6 +202,8 @@ class _UnitConverterState extends State<UnitConverter> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Build an error UI
+
     final input = Padding(
       padding: _padding,
       child: Column(
@@ -197,6 +213,7 @@ class _UnitConverterState extends State<UnitConverter> {
           // accepts numbers and calls the onChanged property on update.
           // You can read more about it here: https://flutter.dev/text-input
           TextField(
+            key: _inputKey,
             style: Theme.of(context).textTheme.headline4,
             decoration: InputDecoration(
               labelStyle: Theme.of(context).textTheme.headline4,
@@ -247,9 +264,7 @@ class _UnitConverterState extends State<UnitConverter> {
       ),
     );
 
-    // TODO: Use a ListView instead of a Column
-    final converter = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final converter = ListView(
       children: [
         input,
         arrows,
@@ -257,11 +272,24 @@ class _UnitConverterState extends State<UnitConverter> {
       ],
     );
 
-    // TODO: Use an OrientationBuilder to add a width to the unit converter
-    // in landscape mode
+    // Based on the orientation of the parent widget, figure out how to best
+    // lay out our converter.
     return Padding(
       padding: _padding,
-      child: converter,
+      child: OrientationBuilder(
+        builder: (BuildContext context, Orientation orientation) {
+          if (orientation == Orientation.portrait) {
+            return converter;
+          } else {
+            return Center(
+              child: SizedBox(
+                width: 450.0,
+                child: converter,
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 }

@@ -25,6 +25,9 @@ class CategoryTile extends StatelessWidget {
   const CategoryTile({
     Key? key,
     required this.category,
+    // TODO: You may want to pass in a null onTap when the Currency [Category]
+    // is in a loading or error state. In build(), you'll want to update the UI
+    // accordingly.
     required this.onTap,
   }) : super(key: key);
 
@@ -59,10 +62,7 @@ class CategoryTile extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Icon(
-                    category.iconLocation,
-                    size: 60.0,
-                  ),
+                  child: Image.asset(category.iconLocation),
                 ),
                 Center(
                   child: Text(
